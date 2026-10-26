@@ -1,12 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="Css/style.css">
+    <title>Planificador de Tareas</title>
+    <link rel="stylesheet" href="./Css/style.css">
 </head>
+
 <body>
-    <script src="Js/Script.js"></script>
+    <header class="encabezado">
+        <h1>Planificador de Tareas</h1>
+    </header>
+
+    <main class="principal">
+        <section class="panel">
+            <h2>Nueva tarea</h2>
+
+            <form id="formulario-tarea" novalidate>
+                <div class="contenedor">
+                    <label class="etiqueta" for="nombre">Nombre:</label>
+                    <input type="text" id="nombre" name="nombre" placeholder="¿Qué hay que hacer?">
+                </div>
+
+                <div class="contenedor">
+                    <label class="etiqueta" for="descripcion">Descripción:</label>
+                    <textarea id="descripcion" name="descripcion" placeholder="Describe la tarea (mínimo 16 caracteres)"></textarea>
+                </div>
+
+                <div class="contenedor">
+                    <label class="etiqueta" for="asignadoA">Asignado a:</label>
+                    <input type="text" id="asignadoA" name="asignadoA" placeholder="Nombre de la persona responsable">
+                </div>
+
+                <div class="contenedor">
+                    <label class="etiqueta" for="fechaDeEntrega">Fecha de entrega:</label>
+                    <input type="date" id="fechaDeEntrega" name="fechaDeEntrega">
+                </div>
+
+                <div class="contenedor">
+                    <label class="etiqueta" for="estado">Estado:</label>
+                    <select id="estado" name="estado">
+                        <option value="">Selecciona un estado</option>
+                        <option value="POR HACER">POR HACER</option>
+                        <option value="EN PROCESO">EN PROCESO</option>
+                        <option value="REVISIÓN">REVISIÓN</option>
+                        <option value="HECHO">HECHO</option>
+                    </select>
+                </div>
+
+                <div id="errores" class="errores" role="alert" hidden></div>
+
+                <button class="boton" type="submit">Aceptar</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>Lista de tareas</h2>
+            <div id="lista-tareas" class="lista-tareas">
+                <p id="mensaje-vacio" class="vacio">Todavía no hay tareas.</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="./Js/Script.js"></script>
 </body>
+
 </html>
