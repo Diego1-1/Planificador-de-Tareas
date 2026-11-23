@@ -28,6 +28,19 @@ class TaskManager {
         if (task) {
             task.estado = status;
         }
+        return task;
+    }
+
+    updateTaskDetails(taskId, updatedFields) {
+        const task = this.tasks.find((t) => t.id === taskId);
+        if (task) {
+            task.nombre = updatedFields.nombre;
+            task.descripcion = updatedFields.descripcion;
+            task.asignadoA = updatedFields.asignadoA;
+            task.fechaDeEntrega = updatedFields.fechaDeEntrega;
+            task.estado = updatedFields.estado;
+        }
+        return task;
     }
 
     assignTask(taskId, assignee) {
@@ -35,6 +48,7 @@ class TaskManager {
         if (task) {
             task.asignadoA = assignee;
         }
+        return task;
     }
 
     save() {
@@ -92,19 +106,42 @@ function createTaskObject(nombre, descripcion, asignadoA, fechaDeEntrega, estado
     };
 }
 
-const taskManager = new TaskManager();
-
-const formulario = document.getElementById("formulario-tarea");
-const campoNombre = document.getElementById("nombre");
-const campoDescripcion = document.getElementById("descripcion");
-const campoAsignadoA = document.getElementById("asignadoA");
-const campoFecha = document.getElementById("fechaDeEntrega");
-const campoEstado = document.getElementById("estado");
-const contenedorErrores = document.getElementById("errores");
-const listaTareas = document.getElementById("lista-tareas");
-const mensajeVacio = document.getElementById("mensaje-vacio");
+let taskManager = null;
+let formulario = null;
+let campoNombre = null;
+let campoDescripcion = null;
+let campoAsignadoA = null;
+let campoFecha = null;
+let campoEstado = null;
+let botonSubmit = null;
+let contenedorErrores = null;
+let listaTareas = null;
+let mensajeVacio = null;
+let editingTaskId = null;
 
 const ESTADOS = ["POR HACER", "EN PROCESO", "REVISIÓN", "HECHO"];
+
+function setFormMode(mode) {
+    if (!botonSubmit) return;
+    if (mode === "update") {
+        botonSubmit.textContent = "actualización";
+    } else {
+        botonSubmit.textContent = "guardar";
+        editingTaskId = null;
+    }
+}
+
+function loadTaskIntoForm(task) {
+    if (!task) return;
+    editingTaskId = task.id;
+    campoNombre.value = task.nombre;
+    campoDescripcion.value = task.descripcion;
+    campoAsignadoA.value = task.asignadoA;
+    campoFecha.value = task.fechaDeEntrega;
+    campoEstado.value = task.estado;
+    setFormMode("update");
+    campoNombre.focus();
+}
 
 function validateTaskForm() {
     const errores = [];
@@ -143,6 +180,7 @@ function validateTaskForm() {
 }
 
 function mostrarErrores(errores) {
+    if (!contenedorErrores) return;
     contenedorErrores.innerHTML = "";
     if (errores.length === 0) {
         contenedorErrores.hidden = true;
@@ -172,16 +210,25 @@ function crearElemento(etiqueta, clase, texto) {
 }
 
 function actualizarMensajeVacio() {
+    if (!mensajeVacio || !taskManager) return;
     mensajeVacio.hidden = taskManager.getAllTasks().length > 0;
 }
 
 function renderizarTareas() {
+    if (!listaTareas || !taskManager) return;
     taskManager.render(listaTareas, createTaskCard, actualizarMensajeVacio);
 }
 
 function createTaskCard(task) {
     const tarjeta = crearElemento("article", "tarjeta");
     tarjeta.dataset.id = task.id;
+
+    tarjeta.addEventListener("click", (event) => {
+        if (event.target.closest("select") || event.target.closest("button")) {
+            return;
+        }
+        loadTaskIntoForm(task);
+    });
 
     const cabecera = crearElemento("div", "tarjeta-cabecera");
     cabecera.appendChild(crearElemento("h3", "", task.nombre));
@@ -213,6 +260,10 @@ function createTaskCard(task) {
     const botonEliminar = crearElemento("button", "boton-eliminar", "Eliminar");
     botonEliminar.type = "button";
     botonEliminar.addEventListener("click", () => {
+        if (editingTaskId === task.id) {
+            formulario.reset();
+            setFormMode("create");
+        }
         taskManager.deleteTask(task.id);
         taskManager.save();
         tarjeta.remove();
@@ -224,19 +275,36 @@ function createTaskCard(task) {
     return tarjeta;
 }
 
-formulario.addEventListener("submit", (event) => {
+function handleFormSubmit(event) {
     event.preventDefault();
 
     if (!validateTaskForm()) {
         return;
     }
 
+    const datosFormulario = {
+        nombre: campoNombre.value.trim(),
+        descripcion: campoDescripcion.value.trim(),
+        asignadoA: campoAsignadoA.value.trim(),
+        fechaDeEntrega: campoFecha.value,
+        estado: campoEstado.value
+    };
+
+    if (editingTaskId !== null) {
+        taskManager.updateTaskDetails(editingTaskId, datosFormulario);
+        taskManager.save();
+        renderizarTareas();
+        formulario.reset();
+        setFormMode("create");
+        return;
+    }
+
     const nuevaTarea = createTaskObject(
-        campoNombre.value.trim(),
-        campoDescripcion.value.trim(),
-        campoAsignadoA.value.trim(),
-        campoFecha.value,
-        campoEstado.value
+        datosFormulario.nombre,
+        datosFormulario.descripcion,
+        datosFormulario.asignadoA,
+        datosFormulario.fechaDeEntrega,
+        datosFormulario.estado
     );
 
     taskManager.addTask(nuevaTarea);
@@ -244,8 +312,40 @@ formulario.addEventListener("submit", (event) => {
     renderizarTareas();
 
     formulario.reset();
-});
+    setFormMode("create");
+}
 
-// Carga inicial al abrir / refrescar la página
-taskManager.load();
-renderizarTareas();
+function initApp() {
+    formulario = document.getElementById("formulario-tarea");
+    if (!formulario) return;
+
+    campoNombre = document.getElementById("nombre");
+    campoDescripcion = document.getElementById("descripcion");
+    campoAsignadoA = document.getElementById("asignadoA");
+    campoFecha = document.getElementById("fechaDeEntrega");
+    campoEstado = document.getElementById("estado");
+    botonSubmit = formulario.querySelector('button[type="submit"]');
+    contenedorErrores = document.getElementById("errores");
+    listaTareas = document.getElementById("lista-tareas");
+    mensajeVacio = document.getElementById("mensaje-vacio");
+
+    taskManager = new TaskManager();
+    setFormMode("create");
+    formulario.addEventListener("submit", handleFormSubmit);
+
+    taskManager.load();
+    renderizarTareas();
+}
+
+if (typeof document !== "undefined") {
+    document.addEventListener("DOMContentLoaded", initApp);
+}
+
+if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+        TaskManager,
+        createTaskObject,
+        createTaskCard,
+        initApp
+    };
+}

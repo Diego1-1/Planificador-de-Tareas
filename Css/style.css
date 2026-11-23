@@ -134,6 +134,7 @@ select:focus {
     padding: 14px 16px;
     background: #fafbfd;
     min-width: 0;
+    cursor: pointer;
 }
 
 .tarjeta-cabecera {
@@ -221,7 +222,7 @@ select:focus {
     }
 }
 
-/* Celulares 
+/* Celulares / pantallas pequeñas */
 @media (max-width: 480px) {
     .encabezado {
         padding: 14px 16px;
