@@ -7,6 +7,7 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
     background: #f3f5f9;
     color: #2b2f38;
+    overflow-x: hidden;
 }
 
 .encabezado {
@@ -35,13 +36,13 @@ body {
     border: 2px solid #4a90e2;
     border-radius: 12px;
     padding: 20px;
+    min-width: 0;
 }
 
 .panel h2 {
     margin-top: 0;
     font-size: 1.1rem;
 }
-
 
 .contenedor {
     display: flex;
@@ -66,6 +67,7 @@ select {
     font-size: 0.95rem;
     font-family: inherit;
     background: #fff;
+    max-width: 100%;
 }
 
 textarea {
@@ -131,34 +133,40 @@ select:focus {
     border-radius: 10px;
     padding: 14px 16px;
     background: #fafbfd;
+    min-width: 0;
 }
 
 .tarjeta-cabecera {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 10px;
 }
 
 .tarjeta h3 {
     margin: 0;
     font-size: 1rem;
+    overflow-wrap: anywhere;
+    flex: 1 1 auto;
 }
 
 .tarjeta p {
     margin: 8px 0;
     font-size: 0.9rem;
+    overflow-wrap: anywhere;
 }
 
 .tarjeta-datos {
     font-size: 0.85rem;
     color: #5b6270;
+    overflow-wrap: anywhere;
 }
 
 .insignia {
     font-size: 0.7rem;
     font-weight: 600;
-    padding: 3px 10px;
+    padding: 4px 10px;
     border-radius: 999px;
     color: #fff;
     white-space: nowrap;
@@ -173,13 +181,15 @@ select:focus {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
     gap: 10px;
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 .tarjeta-acciones select {
     width: auto;
-    padding: 6px 8px;
+    min-width: 140px;
+    padding: 7px 10px;
     font-size: 0.85rem;
 }
 
@@ -188,7 +198,7 @@ select:focus {
     color: #d64545;
     border: 1px solid #d64545;
     border-radius: 8px;
-    padding: 6px 14px;
+    padding: 7px 14px;
     cursor: pointer;
     font-size: 0.85rem;
 }
@@ -198,8 +208,62 @@ select:focus {
     color: #fff;
 }
 
+/* Tablets y pantallas medianas */
 @media (max-width: 760px) {
     .principal {
         grid-template-columns: 1fr;
+        margin: 16px auto;
+        gap: 18px;
+    }
+
+    .panel {
+        padding: 16px;
+    }
+}
+
+/* Celulares 
+@media (max-width: 480px) {
+    .encabezado {
+        padding: 14px 16px;
+    }
+
+    .encabezado h1 {
+        font-size: 1.2rem;
+    }
+
+    .principal {
+        padding: 0 12px;
+        margin: 12px auto;
+        gap: 14px;
+    }
+
+    .panel {
+        padding: 14px;
+        border-radius: 10px;
+    }
+
+    .boton {
+        width: 100%;
+        padding: 12px 16px;
+    }
+
+    .tarjeta {
+        padding: 12px 14px;
+    }
+
+    .tarjeta-acciones {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .tarjeta-acciones select {
+        width: 100%;
+        padding: 9px 10px;
+    }
+
+    .boton-eliminar {
+        width: 100%;
+        padding: 9px 14px;
+        text-align: center;
     }
 }

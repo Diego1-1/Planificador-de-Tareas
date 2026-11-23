@@ -1,7 +1,7 @@
 class TaskManager {
     constructor() {
-        this.tasks = [];     
-        this.currentId = 0;  
+        this.tasks = [];
+        this.currentId = 0;
     }
 
     getAllTasks() {
@@ -36,6 +36,49 @@ class TaskManager {
             task.asignadoA = assignee;
         }
     }
+
+    save() {
+        localStorage.setItem("tasks", JSON.stringify(this.tasks));
+        localStorage.setItem("currentId", String(this.currentId));
+    }
+
+    load() {
+        const savedTasks = localStorage.getItem("tasks");
+        if (savedTasks) {
+            try {
+                const parsed = JSON.parse(savedTasks);
+                if (Array.isArray(parsed)) {
+                    this.tasks = parsed;
+                }
+            } catch (error) {
+                console.error("Error al leer 'tasks' desde localStorage:", error);
+            }
+        }
+
+        const savedId = localStorage.getItem("currentId");
+        if (savedId !== null) {
+            const parsedId = Number(savedId);
+            if (Number.isFinite(parsedId)) {
+                this.currentId = parsedId;
+            }
+        }
+    }
+
+    render(container, createCardFn, onEmptyFn) {
+        const emptyMsg = container.querySelector("#mensaje-vacio");
+        container.innerHTML = "";
+        if (emptyMsg) {
+            container.appendChild(emptyMsg);
+        }
+
+        this.tasks.forEach((task) => {
+            container.appendChild(createCardFn(task));
+        });
+
+        if (typeof onEmptyFn === "function") {
+            onEmptyFn();
+        }
+    }
 }
 
 function createTaskObject(nombre, descripcion, asignadoA, fechaDeEntrega, estado) {
@@ -44,7 +87,7 @@ function createTaskObject(nombre, descripcion, asignadoA, fechaDeEntrega, estado
         nombre: nombre,
         descripcion: descripcion,
         asignadoA: asignadoA,
-        fechaDeEntrega: fechaDeEntrega, 
+        fechaDeEntrega: fechaDeEntrega,
         estado: estado
     };
 }
@@ -62,7 +105,6 @@ const listaTareas = document.getElementById("lista-tareas");
 const mensajeVacio = document.getElementById("mensaje-vacio");
 
 const ESTADOS = ["POR HACER", "EN PROCESO", "REVISIÓN", "HECHO"];
-
 
 function validateTaskForm() {
     const errores = [];
@@ -118,7 +160,7 @@ function mostrarErrores(errores) {
 
 function claseEstado(estado) {
     return "estado-" + estado
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita tildes
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .toLowerCase().replace(/\s+/g, "-");
 }
 
@@ -129,10 +171,17 @@ function crearElemento(etiqueta, clase, texto) {
     return el;
 }
 
+function actualizarMensajeVacio() {
+    mensajeVacio.hidden = taskManager.getAllTasks().length > 0;
+}
+
+function renderizarTareas() {
+    taskManager.render(listaTareas, createTaskCard, actualizarMensajeVacio);
+}
+
 function createTaskCard(task) {
     const tarjeta = crearElemento("article", "tarjeta");
     tarjeta.dataset.id = task.id;
-
 
     const cabecera = crearElemento("div", "tarjeta-cabecera");
     cabecera.appendChild(crearElemento("h3", "", task.nombre));
@@ -155,6 +204,7 @@ function createTaskCard(task) {
     });
     selectEstado.addEventListener("change", () => {
         taskManager.updateTask(task.id, selectEstado.value);
+        taskManager.save();
         insignia.textContent = selectEstado.value;
         insignia.className = "insignia " + claseEstado(selectEstado.value);
     });
@@ -163,8 +213,9 @@ function createTaskCard(task) {
     const botonEliminar = crearElemento("button", "boton-eliminar", "Eliminar");
     botonEliminar.type = "button";
     botonEliminar.addEventListener("click", () => {
-        taskManager.deleteTask(task.id); // 1. se quita del array
-        tarjeta.remove();                // 2. se quita del DOM
+        taskManager.deleteTask(task.id);
+        taskManager.save();
+        tarjeta.remove();
         actualizarMensajeVacio();
     });
     acciones.appendChild(botonEliminar);
@@ -173,15 +224,11 @@ function createTaskCard(task) {
     return tarjeta;
 }
 
-function actualizarMensajeVacio() {
-    mensajeVacio.hidden = taskManager.getAllTasks().length > 0;
-}
-
 formulario.addEventListener("submit", (event) => {
     event.preventDefault();
 
     if (!validateTaskForm()) {
-        return; 
+        return;
     }
 
     const nuevaTarea = createTaskObject(
@@ -192,9 +239,13 @@ formulario.addEventListener("submit", (event) => {
         campoEstado.value
     );
 
-    const tareaGuardada = taskManager.addTask(nuevaTarea);
-    listaTareas.appendChild(createTaskCard(tareaGuardada));
-    actualizarMensajeVacio();
+    taskManager.addTask(nuevaTarea);
+    taskManager.save();
+    renderizarTareas();
 
     formulario.reset();
 });
+
+// Carga inicial al abrir / refrescar la página
+taskManager.load();
+renderizarTareas();
